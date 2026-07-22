@@ -12,9 +12,6 @@ for sample in dataset:
         "fr": encode(sample["fr"])
     })
 
-print(encoded_data[1000])
-print(f"Total encoded pairs: {len(encoded_data)}")
-
 with open("data/encoded_dataset.json", "w", encoding="utf-8") as f:
     json.dump(encoded_data, f, ensure_ascii=False, indent=4)
 
