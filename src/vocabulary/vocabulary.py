@@ -14,7 +14,9 @@ print(f"Vocabulary size: {len(vocabulary)}")
 
 vocab_to_id = {
     "<PAD>": 0,
-    "<UNK>": 1
+    "<UNK>": 1,
+    "<START>": 2,
+    "<END>": 3
 }
 
 for token in sorted(vocabulary):

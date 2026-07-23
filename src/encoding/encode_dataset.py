@@ -9,7 +9,10 @@ encoded_data = []
 for sample in dataset:
     encoded_data.append({
         "en": encode(sample["en"]),
-        "fr": encode(sample["fr"])
+        "fr": encode(
+            sample["fr"],
+            add_special_tokens=True
+        )
     })
 
 print(encoded_data[1000])

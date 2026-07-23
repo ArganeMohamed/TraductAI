@@ -14,11 +14,20 @@ class TranslationDataset(Dataset):
     def __getitem__(self, index):
         sample = self.data[index]
 
-        english = torch.tensor(sample["en"])
-        french = torch.tensor(sample["fr"])
+        english = torch.tensor(
+            sample["en"],
+            dtype=torch.long
+        )
 
-        return english, french
+        french = torch.tensor(
+            sample["fr"],
+            dtype=torch.long
+        )
 
+        tgt_input = french[:-1]
+        tgt_output = french[1:]
+
+        return english, tgt_input, tgt_output
 
 if __name__ == "__main__":
     dataset = TranslationDataset("data/padded_dataset.json")
@@ -29,7 +38,8 @@ if __name__ == "__main__":
         shuffle=True
     )
 
-    english_batch, french_batch = next(iter(dataloader))
+    src_batch, tgt_input_batch, tgt_output_batch = next(iter(dataloader))
 
-    print("English batch shape:", english_batch.shape)
-    print("French batch shape:", french_batch.shape)
+    print("Source:", src_batch.shape)
+    print("Target input:", tgt_input_batch.shape)
+    print("Target output:", tgt_output_batch.shape)
