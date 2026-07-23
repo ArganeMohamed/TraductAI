@@ -20,8 +20,13 @@ class EncoderBlock(nn.Module):
             nn.Linear(ff_dim, embedding_dim)
         )
 
-    def forward(self, x):
-        attention_output, _ = self.attention(x, x, x)
+    def forward(self, x, src_padding_mask=None):
+        attention_output, _ = self.attention(
+            x,
+            x,
+            x,
+            key_padding_mask=src_padding_mask
+        )
         x = self.norm1(x + attention_output)
 
         ff_output = self.feed_forward(x)

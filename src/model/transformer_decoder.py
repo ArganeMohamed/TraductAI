@@ -25,15 +25,23 @@ class TransformerDecoder(nn.Module):
             ]
         )
 
-    def forward(self, x, encoder_output, tgt_mask=None):
+    def forward(
+        self,
+        x,
+        encoder_output,
+        tgt_mask=None,
+        tgt_padding_mask=None,
+        src_padding_mask=None
+    ):
 
         for layer in self.layers:
             x = layer(
                 x,
                 encoder_output,
-                tgt_mask
+                tgt_mask,
+                tgt_padding_mask,
+                src_padding_mask
             )
-
         return x
 
 

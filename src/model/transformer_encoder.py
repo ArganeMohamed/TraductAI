@@ -24,9 +24,12 @@ class TransformerEncoder(nn.Module):
             ]
         )
 
-    def forward(self, x):
+    def forward(self, x, src_padding_mask=None):
         for layer in self.layers:
-            x = layer(x)
+            x = layer(
+                x,
+                src_padding_mask
+            )
 
         return x
 

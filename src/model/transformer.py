@@ -56,10 +56,16 @@ class Transformer(nn.Module):
 
     def forward(self, src, tgt):
 
+        src_padding_mask = (src == 0)
+        tgt_padding_mask = (tgt == 0)
+
         src = self.src_embedding(src)
         src = self.positional_encoding(src)
 
-        encoder_output = self.encoder(src)
+        encoder_output = self.encoder(
+            src,
+            src_padding_mask
+        )
 
 
         tgt = self.tgt_embedding(tgt)
@@ -73,7 +79,9 @@ class Transformer(nn.Module):
         decoder_output = self.decoder(
             tgt,
             encoder_output,
-            tgt_mask
+            tgt_mask,
+            tgt_padding_mask,
+            src_padding_mask
         )
 
         output = self.output_layer(decoder_output)

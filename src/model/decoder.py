@@ -34,13 +34,21 @@ class DecoderBlock(nn.Module):
         )
 
 
-    def forward(self, x, encoder_output, tgt_mask=None):
+    def forward(
+        self,
+        x,
+        encoder_output,
+        tgt_mask=None,
+        tgt_padding_mask=None,
+        src_padding_mask=None
+    ):
 
         self_attention_output, _ = self.self_attention(
             x,
             x,
             x,
-            attn_mask=tgt_mask
+            attn_mask=tgt_mask,
+            key_padding_mask=tgt_padding_mask
         )
 
         x = self.norm1(
@@ -50,7 +58,8 @@ class DecoderBlock(nn.Module):
         cross_attention_output, _ = self.cross_attention(
             x,
             encoder_output,
-            encoder_output
+            encoder_output,
+            key_padding_mask=src_padding_mask
         )
 
         x = self.norm2(
