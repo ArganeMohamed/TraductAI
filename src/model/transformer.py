@@ -4,12 +4,16 @@ import torch.nn as nn
 from src.model.embedding import Embedding
 from src.model.positional_encoding import PositionalEncoding
 from src.model.transformer_encoder import TransformerEncoder
+from src.model.transformer_decoder import TransformerDecoder
+
+from src.model.mask import generate_square_subsequent_mask
 
 
 class Transformer(nn.Module):
     def __init__(
         self,
-        vocab_size,
+        src_vocab_size,
+        tgt_vocab_size,
         embedding_dim=128,
         num_heads=8,
         ff_dim=512,
@@ -17,8 +21,13 @@ class Transformer(nn.Module):
     ):
         super().__init__()
 
-        self.embedding = Embedding(
-            vocab_size=vocab_size,
+        self.src_embedding = Embedding(
+            vocab_size=src_vocab_size,
+            embedding_dim=embedding_dim
+        )
+
+        self.tgt_embedding = Embedding(
+            vocab_size=tgt_vocab_size,
             embedding_dim=embedding_dim
         )
 
@@ -33,22 +42,62 @@ class Transformer(nn.Module):
             ff_dim=ff_dim
         )
 
-    def forward(self, x):
+        self.decoder = TransformerDecoder(
+            num_layers=num_layers,
+            embedding_dim=embedding_dim,
+            num_heads=num_heads,
+            ff_dim=ff_dim
+        )
 
-        x = self.embedding(x)
+        self.output_layer = nn.Linear(
+            embedding_dim,
+            tgt_vocab_size
+        )
 
-        x = self.positional_encoding(x)
+    def forward(self, src, tgt):
 
-        x = self.encoder(x)
+        src = self.src_embedding(src)
+        src = self.positional_encoding(src)
 
-        return x
+        encoder_output = self.encoder(src)
+
+
+        tgt = self.tgt_embedding(tgt)
+        tgt = self.positional_encoding(tgt)
+
+        tgt_mask = generate_square_subsequent_mask(
+            tgt.size(1)
+        ).to(tgt.device)
+
+
+        decoder_output = self.decoder(
+            tgt,
+            encoder_output,
+            tgt_mask
+        )
+
+        output = self.output_layer(decoder_output)
+
+        return output
 
 if __name__ == "__main__":
-    model = Transformer(vocab_size=100000)
+    model = Transformer(
+        src_vocab_size=50000,
+        tgt_vocab_size=60000
+    )
 
-    x = torch.randint(0, 100000, (32, 50))
+    src = torch.randint(
+        0,
+        50000,
+        (32,50)
+    )
 
-    output = model(x)
+    tgt = torch.randint(
+        0,
+        60000,
+        (32,50)
+    )
 
-    print(x.shape)
+    output = model(src, tgt)
+
     print(output.shape)
