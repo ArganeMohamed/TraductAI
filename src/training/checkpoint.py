@@ -5,26 +5,37 @@ def save_checkpoint(
     model,
     optimizer,
     epoch,
-    loss,
+    train_loss,
+    validation_loss,
     path
 ):
+    
+    checkpoint = {
+        "epoch": epoch,
+        "model_state_dict": model.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict(),
+        "train_loss": train_loss,
+        "validation_loss": validation_loss
+    }
+
     torch.save(
-        {
-            "epoch": epoch,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "loss": loss,
-        },
+        checkpoint,
         path
     )
 
 
 def load_checkpoint(
+    path,
     model,
     optimizer,
-    path
+    device
 ):
-    checkpoint = torch.load(path)
+
+    checkpoint = torch.load(
+        path,
+        map_location=device,
+        weights_only=False
+    )
 
     model.load_state_dict(
         checkpoint["model_state_dict"]
@@ -34,7 +45,8 @@ def load_checkpoint(
         checkpoint["optimizer_state_dict"]
     )
 
-    return (
-        checkpoint["epoch"],
-        checkpoint["loss"]
-    )
+    epoch = checkpoint["epoch"]
+    train_loss = checkpoint["train_loss"]
+    validation_loss = checkpoint["validation_loss"]
+
+    return epoch, train_loss, validation_loss
