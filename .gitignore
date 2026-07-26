@@ -5,6 +5,7 @@ data/
 !data/*.en
 !data/*.fr
 !data/tokenizer.json
+!data/dataloader.py
 
 checkpoints/
 
