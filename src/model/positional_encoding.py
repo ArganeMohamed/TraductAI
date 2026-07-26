@@ -3,8 +3,9 @@ import torch.nn as nn
 
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, embedding_dim, max_length=5000):
+    def __init__(self, embedding_dim, max_length=5000, dropout=0.1):
         super().__init__()
+        self.dropout = nn.Dropout(dropout)
 
         pe = torch.zeros(max_length, embedding_dim)
         position = torch.arange(max_length).unsqueeze(1)
@@ -20,15 +21,12 @@ class PositionalEncoding(nn.Module):
 
     def forward(self, x):
         x = x + self.pe[:x.size(1)].unsqueeze(0)
-        return x
+        return self.dropout(x)
 
 
 if __name__ == "__main__":
     pe = PositionalEncoding(512)
     x = torch.randn(32, 50, 512)
     output = pe(x)
-
-    print("Input:")
     print(x[0][0][:10])
-    print("\nOutput:")
     print(output[0][0][:10])

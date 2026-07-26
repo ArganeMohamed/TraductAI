@@ -27,7 +27,14 @@ class Transformer(nn.Module):
         )
 
         self.output_layer = nn.Linear(embedding_dim, vocab_size)
-        self.output_layer.weight = self.embedding.embedding.weight  # weight tying
+        self.output_layer.weight = self.embedding.embedding.weight
+
+        self._init_weights()
+
+    def _init_weights(self):
+        for p in self.parameters():
+            if p.dim() > 1:
+                nn.init.xavier_uniform_(p)
 
     def forward(self, src, tgt):
         src_padding_mask = (src == self.pad_id)
@@ -51,12 +58,8 @@ class Transformer(nn.Module):
 
 if __name__ == "__main__":
     model = Transformer(vocab_size=32000)
-
     src = torch.randint(0, 32000, (32, 50))
     tgt = torch.randint(0, 32000, (32, 50))
-
     output = model(src, tgt)
     print(output.shape)
-
-    n_params = sum(p.numel() for p in model.parameters())
-    print(f"Total parameters: {n_params:,}")
+    print(f"Total parameters: {sum(p.numel() for p in model.parameters()):,}")
