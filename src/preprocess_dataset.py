@@ -1,40 +1,70 @@
 from datasets import load_dataset
-import json
 
-dataset = load_dataset("Helsinki-NLP/opus_books", "en-fr")
-cleaned_data = []
+MAX_WORDS = 100
+MIN_WORDS = 1
+MAX_RATIO = 2.5
 
-for sample in dataset["train"]:
-    en = sample["translation"]["en"].strip()
-    fr = sample["translation"]["fr"].strip()
 
-    cleaned_data.append({
-        "en": en,
-        "fr": fr
-    })
+def is_valid_pair(en, fr):
+    if not en or not fr:
+        return False
 
-seen = set()
-unique_data = []
+    en_len = len(en.split())
+    fr_len = len(fr.split())
 
-for sample in cleaned_data:
-    pair = (sample["en"], sample["fr"])
+    if en_len < MIN_WORDS or fr_len < MIN_WORDS:
+        return False
 
-    if pair not in seen:
-        seen.add(pair)
-        unique_data.append(sample)
+    if en_len > MAX_WORDS or fr_len > MAX_WORDS:
+        return False
 
-print(f"Rows after removing duplicates: {len(unique_data)}")
-print(f"Duplicates removed: {len(cleaned_data) - len(unique_data)}")
+    ratio = max(en_len, fr_len) / min(en_len, fr_len)
 
-none_count = 0
+    if ratio > MAX_RATIO:
+        return False
 
-for sample in unique_data:
-    if sample["en"] is None or sample["fr"] is None:
-        none_count += 1
+    return True
 
-print(f"Sentence pairs with None: {none_count}")
 
-with open("data/cleaned_dataset.json", "w", encoding="utf-8") as f:
-    json.dump(unique_data, f, ensure_ascii=False, indent=4)
+def clean_split(dataset, hf_split_name):
+    seen = set()
+    pairs = []
 
-print("Cleaned dataset saved successfully")
+    for sample in dataset[hf_split_name]:
+        en = sample["translation"]["en"].strip()
+        fr = sample["translation"]["fr"].strip()
+
+        if not is_valid_pair(en, fr):
+            continue
+
+        key = (en, fr)
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        pairs.append((en, fr))
+
+    print(f"{hf_split_name}: kept {len(pairs)} / {len(dataset[hf_split_name])}")
+
+    return pairs
+
+
+def write_split(pairs, split_name):
+    with open(f"data/{split_name}.en", "w", encoding="utf-8") as f_en, \
+         open(f"data/{split_name}.fr", "w", encoding="utf-8") as f_fr:
+
+        for en, fr in pairs:
+            f_en.write(en + "\n")
+            f_fr.write(fr + "\n")
+
+    print(f"Saved data/{split_name}.en and data/{split_name}.fr")
+
+
+dataset = load_dataset("Helsinki-NLP/opus-100", "en-fr")
+
+for hf_split, local_name in [("train", "train"), ("validation", "valid"), ("test", "test")]:
+    pairs = clean_split(dataset, hf_split)
+    write_split(pairs, local_name)
+
+print("\nAll splits cleaned and saved.")
