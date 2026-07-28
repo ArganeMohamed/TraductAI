@@ -1,0 +1,4 @@
+*.fr linguist-detectable=false
+*.en linguist-detectable=false
+*.ipynb linguist-detectable=false
+*.py linguist-language=Python
