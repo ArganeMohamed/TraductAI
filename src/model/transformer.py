@@ -36,13 +36,14 @@ class Transformer(nn.Module):
             if p.dim() > 1:
                 nn.init.xavier_uniform_(p)
 
-    def forward(self, src, tgt):
+    def encode(self, src):
         src_padding_mask = (src == self.pad_id)
-        tgt_padding_mask = (tgt == self.pad_id)
-
         src_embedded = self.positional_encoding(self.embedding(src))
         encoder_output = self.encoder(src_embedded, src_key_padding_mask=src_padding_mask)
+        return encoder_output, src_padding_mask
 
+    def decode(self, tgt, encoder_output, src_padding_mask):
+        tgt_padding_mask = (tgt == self.pad_id)
         tgt_embedded = self.positional_encoding(self.embedding(tgt))
         tgt_mask = generate_square_subsequent_mask(tgt.size(1)).to(tgt.device)
 
@@ -52,8 +53,11 @@ class Transformer(nn.Module):
             tgt_key_padding_mask=tgt_padding_mask,
             memory_key_padding_mask=src_padding_mask
         )
-
         return self.output_layer(decoder_output)
+
+    def forward(self, src, tgt):
+        encoder_output, src_padding_mask = self.encode(src)
+        return self.decode(tgt, encoder_output, src_padding_mask)
 
 
 if __name__ == "__main__":
